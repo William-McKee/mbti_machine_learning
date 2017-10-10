@@ -71,5 +71,15 @@ def get_population_percentage(item):
 # Group by type and list percentages
 mbti_type_counts = mbti_data.groupby('type').count()
 mbti_type_counts['percent_sample'] = mbti_type_counts.apply(get_sample_percentage)
-mbti_type_counts['percent_population'] = mbti_type_counts.index.map(try_it_2)
+mbti_type_counts['percent_population'] = mbti_type_counts.index.map(get_population_percentage)
 print(mbti_type_counts)
+
+# Store posts by MBTI type
+mbti_posts = {}
+for index,row in mbti_data.iterrows():
+    this_type = row['type']
+    these_posts = row['posts'].split('|||')
+    if this_type in mbti_posts:
+        mbti_posts[this_type].extend(these_posts)
+    else:
+        mbti_posts[this_type] = these_posts
