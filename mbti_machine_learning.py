@@ -74,51 +74,58 @@ mbti_type_counts['percent_population'] = mbti_type_counts.index.map(get_populati
 print(mbti_type_counts)
 print("\n")
 
+def clean_up_post(post):
+    '''Change post contents so that they contain only significant words'''
+    # Cleanup post
+    post_words = re.sub('[^a-zA-Z]', '', post)
+    
+    # Remove splitter since posts are for same MBTI type
+    post_words = re.sub('|||', '', post)
+        
+    # Remove links        
+    post_words = re.sub(r'''(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))''', '', post_words, flags=re.MULTILINE) 
+        
+    # Convert to lower case, split into individual words
+    post_words = post_words.lower().split()
+        
+    # Remove stop words
+    meaningful_words = [w for w in post_words if not w in stops_set]
+        
+    # Final post for storage
+    final_post = ''.join(meaningful_words)
+    
+    return (final_post)
+
 # Store posts by MBTI type
-# https://www.kaggle.com/c/word2vec-nlp-tutorial#part-1-for-beginners-bag-of-words
-# TODO: How to handle http links?
 mbti_types_list = []
 mbti_posts_list = []
 stops_set = set(stopwords.words("english")) 
 for index,row in mbti_data.iterrows():
-    this_type = row['type']
-    these_posts = row['posts'].split('|||')
-    for post in these_posts:
-        # MBTI type
-        mbti_types_list.append(this_type)
-        
-        # Cleanup post
-        post_letters_only = re.sub("[^a-zA-Z]", " ", post)
-        
-        # Convert to lower case, split into individual words
-        post_words = post_letters_only.lower().split()
-        
-        # Remove stop words
-        meaningful_words = [w for w in post_words if not w in stops_set]
-        
-        # Final post for storage
-        final_post = " ".join(meaningful_words)
-        
-        # MBTI post
-        mbti_posts_list.append(final_post)
+    mbti_types_list.append(row['type'])
+    mbti_posts_list.append(clean_up_post(row['posts']))
         
 # ===== NATURAL LANGUAGE EXPERIMENTATION =====
 from sklearn.feature_extraction.text import CountVectorizer
-vectorizer = CountVectorizer(max_features=30000)
+from sklearn.feature_extraction.text import TfidfTransformer
 
+vectorizer = CountVectorizer(analyzer='word', min_df=0.1, max_df=0.5)
 fitted_transformed_data = vectorizer.fit_transform(mbti_posts_list)
+print("Fitted Transformed Data:")
 print(fitted_transformed_data)
+print("\n")
 
+tfidf_transformer = TfidfTransformer()
+tfidf_transformed_data =  tfidf_transformer.fit_transform(fitted_transformed_data).toarray()
+print("TfIdf Transformed Data:")
+print(tfidf_transformed_data)
 print("\n")
-print('Shape of Sparse Matrix: ', fitted_transformed_data.shape)
-print('Amount of Non-Zero occurences: ', fitted_transformed_data.nnz)
-print('sparsity: %.2f%%' % (100.0 * fitted_transformed_data.nnz /
-                            (fitted_transformed_data.shape[0] * fitted_transformed_data.shape[1])))
-print("\n")
+
+# TODO: Dimension reductionality likely needed to improve model performance
 
 # ===== MACHINE LEARNING EXPERIMENTATION =====
 from sklearn.model_selection import train_test_split
 from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report
 
@@ -136,14 +143,27 @@ data_test_labeled = lb.fit_transform(data_test)
 data_train_labeled = data_train_labeled[:, None]
 data_test_labeled = data_test_labeled[:, None]
 
-tree_classifier = tree.DecisionTreeClassifier(min_samples_split=10, max_leaf_nodes=1024)
-tree = tree_classifier.fit(data_train_labeled, labels_train)
-accuracy = tree_classifier.score(data_test_labeled, labels_test)
-print("Accuracy: ", accuracy)
+# Decision Tree
+print("DECISION TREE CLASSIFIER:")
+tree_classifier = tree.DecisionTreeClassifier(max_leaf_nodes=2048) #min_samples_split=10, max_leaf_nodes=1024)
+tree_classifier = tree_classifier.fit(data_train_labeled, labels_train)
+tree_accuracy = tree_classifier.score(data_test_labeled, labels_test)
+print("Accuracy: ", tree_accuracy)
 print("\n")
 
-predictions = tree.predict(data_test_labeled)
-print (classification_report(labels_test, predictions))
+tree_predictions = tree_classifier.predict(data_test_labeled)
+print("Classification Report:")
+print(classification_report(labels_test, tree_predictions))
+print("\n")
 
-# TODO: This warning message results in poor scores for algorithm
-# UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples.
+# Random Forest
+print("RANDOM FOREST CLASSIFIER:")
+forest = RandomForestClassifier(n_estimators=10) #, min_samples_split=10, max_leaf_nodes=1024)
+forest = forest.fit(data_train_labeled, labels_train)
+forest_accuracy = forest.score(data_test_labeled, labels_test)
+print("Accuracy: ", forest_accuracy)
+print("\n")
+
+forest_predictions = forest.predict(data_test_labeled)
+print("Classification Report:")
+print(classification_report(labels_test, forest_predictions))
