@@ -6,10 +6,9 @@ October 2017
 """
 
 # Initial library declarations
-#import matplotlib.pyplot as plt
-#import numpy as np
+import re
 import pandas as pd
-#import seaborn as sns
+from nltk.corpus import stopwords
 
 # General population percentages for MBTI types
 # http://www.myersbriggs.org/my-mbti-personality-type/my-mbti-results/how-frequent-is-my-type.htm?bhcp=1
@@ -42,7 +41,7 @@ print("Column values:")
 print(mbti_data.columns.values)
 print("\n")
 
-print("Data description: ")
+print("Data description:")
 print(mbti_data.describe)
 print("\n")
 
@@ -73,13 +72,78 @@ mbti_type_counts = mbti_data.groupby('type').count()
 mbti_type_counts['percent_sample'] = mbti_type_counts.apply(get_sample_percentage)
 mbti_type_counts['percent_population'] = mbti_type_counts.index.map(get_population_percentage)
 print(mbti_type_counts)
+print("\n")
 
 # Store posts by MBTI type
-mbti_posts = {}
+# https://www.kaggle.com/c/word2vec-nlp-tutorial#part-1-for-beginners-bag-of-words
+# TODO: How to handle http links?
+mbti_types_list = []
+mbti_posts_list = []
+stops_set = set(stopwords.words("english")) 
 for index,row in mbti_data.iterrows():
     this_type = row['type']
     these_posts = row['posts'].split('|||')
-    if this_type in mbti_posts:
-        mbti_posts[this_type].extend(these_posts)
-    else:
-        mbti_posts[this_type] = these_posts
+    for post in these_posts:
+        # MBTI type
+        mbti_types_list.append(this_type)
+        
+        # Cleanup post
+        post_letters_only = re.sub("[^a-zA-Z]", " ", post)
+        
+        # Convert to lower case, split into individual words
+        post_words = post_letters_only.lower().split()
+        
+        # Remove stop words
+        meaningful_words = [w for w in post_words if not w in stops_set]
+        
+        # Final post for storage
+        final_post = " ".join(meaningful_words)
+        
+        # MBTI post
+        mbti_posts_list.append(final_post)
+        
+# ===== NATURAL LANGUAGE EXPERIMENTATION =====
+from sklearn.feature_extraction.text import CountVectorizer
+vectorizer = CountVectorizer(max_features=30000)
+
+fitted_transformed_data = vectorizer.fit_transform(mbti_posts_list)
+print(fitted_transformed_data)
+
+print("\n")
+print('Shape of Sparse Matrix: ', fitted_transformed_data.shape)
+print('Amount of Non-Zero occurences: ', fitted_transformed_data.nnz)
+print('sparsity: %.2f%%' % (100.0 * fitted_transformed_data.nnz /
+                            (fitted_transformed_data.shape[0] * fitted_transformed_data.shape[1])))
+print("\n")
+
+# ===== MACHINE LEARNING EXPERIMENTATION =====
+from sklearn.model_selection import train_test_split
+from sklearn import tree
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report
+
+# Split data into training and testing sets
+data_train, data_test, labels_train, labels_test = \
+train_test_split(mbti_posts_list, mbti_types_list, test_size=0.25)
+print("Training / Testing / Total Data lengths: ")
+print(len(data_train), len(data_test), len(data_train) + len(data_test))
+print("\n")
+
+# Need labeled and transformed data
+lb = LabelEncoder()
+data_train_labeled = lb.fit_transform(data_train)
+data_test_labeled = lb.fit_transform(data_test)
+data_train_labeled = data_train_labeled[:, None]
+data_test_labeled = data_test_labeled[:, None]
+
+tree_classifier = tree.DecisionTreeClassifier(min_samples_split=10, max_leaf_nodes=1024)
+tree = tree_classifier.fit(data_train_labeled, labels_train)
+accuracy = tree_classifier.score(data_test_labeled, labels_test)
+print("Accuracy: ", accuracy)
+print("\n")
+
+predictions = tree.predict(data_test_labeled)
+print (classification_report(labels_test, predictions))
+
+# TODO: This warning message results in poor scores for algorithm
+# UndefinedMetricWarning: Precision and F-score are ill-defined and being set to 0.0 in labels with no predicted samples.
