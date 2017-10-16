@@ -12,39 +12,22 @@ from nltk.corpus import stopwords
 
 # General population percentages for MBTI types
 # http://www.myersbriggs.org/my-mbti-personality-type/my-mbti-results/how-frequent-is-my-type.htm?bhcp=1
-mbti_types = { 'ENFJ':  2.5,
-               'ENFP':  8.1,
-               'ENTJ':  1.8,
-               'ENTP':  3.2,
-               'ESFJ': 12.3,
-               'ESFP':  8.5,
-               'ESTJ':  8.7,
-               'ESTP':  4.3,
-               'INFJ':  1.5,
-               'INFP':  4.4,
-               'INTJ':  2.1,
-               'INTP':  3.3,
-               'ISFJ': 13.8,
-               'ISFP':  8.8,
-               'ISTJ': 11.6,
-               'ISTP':  5.4 }
-
-mbti_temperments = { 'ENFJ': 'NF',
-                     'ENFP': 'NF',
-                     'ENTJ': 'NT',
-                     'ENTP': 'NT',
-                     'ESFJ': 'SJ',
-                     'ESFP': 'SP',
-                     'ESTJ': 'SJ',
-                     'ESTP': 'SP',
-                     'INFJ': 'NF',
-                     'INFP': 'NF',
-                     'INTJ': 'NT',
-                     'INTP': 'NT',
-                     'ISFJ': 'SJ',
-                     'ISFP': 'SP',
-                     'ISTJ': 'SJ',
-                     'ISTP': 'SP' }
+mbti_types = { 'ENFJ':  [2.5,'NF'],
+               'ENFP':  [8.1,'NF'],
+               'ENTJ':  [1.8,'NT'],
+               'ENTP':  [3.2,'NT'],
+               'ESFJ': [12.3,'SJ'],
+               'ESFP':  [8.5,'SP'],
+               'ESTJ':  [8.7,'SJ'],
+               'ESTP':  [4.3,'SP'],
+               'INFJ':  [1.5,'NF'],
+               'INFP':  [4.4,'NF'],
+               'INTJ':  [2.1,'NT'],
+               'INTP':  [3.3,'NT'],
+               'ISFJ': [13.8,'SJ'],
+               'ISFP':  [8.8,'SP'],
+               'ISTJ': [11.6,'SJ'],
+               'ISTP':  [5.4,'SP'] }
 
 # Read the MBTI file
 mbti_data = pd.read_csv('mbti_1.csv')
@@ -82,13 +65,25 @@ def get_sample_percentage(item):
 
 def get_population_percentage(item):
     '''return the percentage of this item among the population'''
-    return mbti_types[item]
+    return mbti_types[item][0]
+
+def get_temperament(item):
+    '''return the temperament of this item'''
+    return mbti_types[item][1]
 
 # Group by type and list percentages
+print("MBTI TYPES TABLE\n")
 mbti_type_counts = mbti_data.groupby('type').count()
 mbti_type_counts['percent_sample'] = mbti_type_counts.apply(get_sample_percentage)
 mbti_type_counts['percent_population'] = mbti_type_counts.index.map(get_population_percentage)
+mbti_type_counts['temperament'] = mbti_type_counts.index.map(get_temperament)
 print(mbti_type_counts)
+print("\n")
+
+# Group by temperament and list percentages
+print("MBTI TEMPERAMENTS TABLE\n")
+mbti_temperament_counts = mbti_type_counts.groupby('temperament').sum()
+print(mbti_temperament_counts)
 print("\n")
 
 def clean_up_post(post, stops_set):
@@ -118,7 +113,7 @@ mbti_types_list = []
 mbti_posts_list = []
 stops_set = set(stopwords.words("english"))
 for index,row in mbti_data.iterrows():
-    mbti_types_list.append(mbti_temperments[row['type']])
+    mbti_types_list.append(mbti_types[row['type']][1])
     mbti_posts_list.append(clean_up_post(row['posts'], stops_set))
         
 # ===== NATURAL LANGUAGE EXPERIMENTATION =====
