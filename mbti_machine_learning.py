@@ -29,6 +29,23 @@ mbti_types = { 'ENFJ':  2.5,
                'ISTJ': 11.6,
                'ISTP':  5.4 }
 
+mbti_temperments = { 'ENFJ': 'NF',
+                     'ENFP': 'NF',
+                     'ENTJ': 'NT',
+                     'ENTP': 'NT',
+                     'ESFJ': 'SJ',
+                     'ESFP': 'SP',
+                     'ESTJ': 'SJ',
+                     'ESTP': 'SP',
+                     'INFJ': 'NF',
+                     'INFP': 'NF',
+                     'INTJ': 'NT',
+                     'INTP': 'NT',
+                     'ISFJ': 'SJ',
+                     'ISFP': 'SP',
+                     'ISTJ': 'SJ',
+                     'ISTP': 'SP' }
+
 # Read the MBTI file
 mbti_data = pd.read_csv('mbti_1.csv')
 
@@ -74,7 +91,7 @@ mbti_type_counts['percent_population'] = mbti_type_counts.index.map(get_populati
 print(mbti_type_counts)
 print("\n")
 
-def clean_up_post(post):
+def clean_up_post(post, stops_set):
     '''Change post contents so that they contain only significant words'''
     # Cleanup post
     post_words = re.sub('[^a-zA-Z]', '', post)
@@ -95,14 +112,14 @@ def clean_up_post(post):
     final_post = ''.join(meaningful_words)
     
     return (final_post)
-
-# Store posts by MBTI type
+    
+# Store posts by MBTI temperment
 mbti_types_list = []
 mbti_posts_list = []
-stops_set = set(stopwords.words("english")) 
+stops_set = set(stopwords.words("english"))
 for index,row in mbti_data.iterrows():
-    mbti_types_list.append(row['type'])
-    mbti_posts_list.append(clean_up_post(row['posts']))
+    mbti_types_list.append(mbti_temperments[row['type']])
+    mbti_posts_list.append(clean_up_post(row['posts'], stops_set))
         
 # ===== NATURAL LANGUAGE EXPERIMENTATION =====
 from sklearn.feature_extraction.text import CountVectorizer
@@ -120,8 +137,6 @@ print("TfIdf Transformed Data:")
 print(tfidf_transformed_data)
 print("\n")
 
-# TODO: Dimension reductionality likely needed to improve model performance
-
 # ===== MACHINE LEARNING EXPERIMENTATION =====
 from sklearn.model_selection import train_test_split
 from sklearn import tree
@@ -131,7 +146,7 @@ from sklearn.metrics import classification_report
 
 # Split data into training and testing sets
 data_train, data_test, labels_train, labels_test = \
-train_test_split(mbti_posts_list, mbti_types_list, test_size=0.25)
+train_test_split(mbti_posts_list, mbti_types_list, test_size=0.2, random_state=32)
 print("Training / Testing / Total Data lengths: ")
 print(len(data_train), len(data_test), len(data_train) + len(data_test))
 print("\n")
@@ -143,9 +158,13 @@ data_test_labeled = lb.fit_transform(data_test)
 data_train_labeled = data_train_labeled[:, None]
 data_test_labeled = data_test_labeled[:, None]
 
+# Model parameters
+MIN_SAMPLES_SPLIT_VALUE = 10
+MAX_LEAF_NODE_VALUE = 150
+
 # Decision Tree
 print("DECISION TREE CLASSIFIER:")
-tree_classifier = tree.DecisionTreeClassifier(max_leaf_nodes=2048) #min_samples_split=10, max_leaf_nodes=1024)
+tree_classifier = tree.DecisionTreeClassifier(min_samples_split=MIN_SAMPLES_SPLIT_VALUE, max_leaf_nodes=MAX_LEAF_NODE_VALUE)
 tree_classifier = tree_classifier.fit(data_train_labeled, labels_train)
 tree_accuracy = tree_classifier.score(data_test_labeled, labels_test)
 print("Accuracy: ", tree_accuracy)
@@ -158,7 +177,7 @@ print("\n")
 
 # Random Forest
 print("RANDOM FOREST CLASSIFIER:")
-forest = RandomForestClassifier(n_estimators=10) #, min_samples_split=10, max_leaf_nodes=1024)
+forest = RandomForestClassifier(n_estimators=10, min_samples_split=MIN_SAMPLES_SPLIT_VALUE, max_leaf_nodes=MAX_LEAF_NODE_VALUE)
 forest = forest.fit(data_train_labeled, labels_train)
 forest_accuracy = forest.score(data_test_labeled, labels_test)
 print("Accuracy: ", forest_accuracy)
