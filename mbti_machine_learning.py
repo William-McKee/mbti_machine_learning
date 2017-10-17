@@ -6,8 +6,8 @@ October 2017
 """
 
 # Initial library declarations
-import re
 import pandas as pd
+import string
 from nltk.corpus import stopwords
 
 # General population percentages for MBTI types
@@ -88,25 +88,44 @@ print("\n")
 
 def clean_up_post(post, stops_set):
     '''Change post contents so that they contain only significant words'''
-    # Cleanup post
-    post_words = re.sub('[^a-zA-Z]', '', post)
+    # Split up post
+    these_posts = post.split("|||")
+    final_posts = []
     
-    # Remove splitter since posts are for same MBTI type
-    post_words = re.sub('|||', '', post)
+    # Loop through posts
+    for this_post in these_posts:
         
-    # Remove links        
-    post_words = re.sub(r'''(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))''', '', post_words, flags=re.MULTILINE) 
+        # Split into words
+        words = this_post.split()
         
-    # Convert to lower case, split into individual words
-    post_words = post_words.lower().split()
-        
-    # Remove stop words
-    meaningful_words = [w for w in post_words if not w in stops_set]
-        
-    # Final post for storage
-    final_post = ''.join(meaningful_words)
+        # Loop through words
+        final_words = ""
+        for word in words:
+
+            # Remove punctuation and tildes
+            exclude = set(string.punctuation)
+            this_word = ''.join(ch for ch in word if ch not in exclude)
     
-    return (final_post)
+            # Convert to lower case
+            this_word = this_word.lower()
+            
+            # Exclude links, numbers, stop words, and MBTI types
+            if (word.startswith('http') or word.isdigit() or word in stops_set or word.upper() in mbti_types.keys()):
+                continue
+            
+            # Final post for storage
+            final_words = final_words + " " + this_word
+        
+        # Join words for post
+        #final_words = final_words.strip()
+        final_posts.append(final_words)
+    
+    # Join posts
+    result_post = ""
+    for item in final_posts:
+        result_post = result_post + item
+    
+    return (result_post)
     
 # Store posts by MBTI temperment
 mbti_types_list = []
@@ -115,6 +134,7 @@ stops_set = set(stopwords.words("english"))
 for index,row in mbti_data.iterrows():
     mbti_types_list.append(mbti_types[row['type']][1])
     mbti_posts_list.append(clean_up_post(row['posts'], stops_set))
+
         
 # ===== NATURAL LANGUAGE EXPERIMENTATION =====
 from sklearn.feature_extraction.text import CountVectorizer
