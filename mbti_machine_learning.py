@@ -159,6 +159,7 @@ print(X_test_tfidf.shape)
 print("\n")
 
 # ===== MACHINE LEARNING EXPERIMENTATION =====
+# TODO: Implement function which cycles through parameters and return highest accuracy (or some other measure)
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
@@ -172,40 +173,40 @@ data_test_labeled = lb.fit_transform(data_test)
 data_train_labeled = data_train_labeled[:, None]
 data_test_labeled = data_test_labeled[:, None]
 
-# Model parameters
-MIN_SAMPLES_SPLIT_VALUE = 10
-MAX_LEAF_NODE_VALUE = 150
-
 # Decision Tree
+MIN_SAMPLES_SPLIT_VALUE_DT = 10
+MAX_LEAF_NODE_VALUE_DT = 50
 print("DECISION TREE CLASSIFIER:")
-tree_classifier = tree.DecisionTreeClassifier(min_samples_split=MIN_SAMPLES_SPLIT_VALUE, max_leaf_nodes=MAX_LEAF_NODE_VALUE)
+tree_classifier = tree.DecisionTreeClassifier(min_samples_split=MIN_SAMPLES_SPLIT_VALUE_DT, max_leaf_nodes=MAX_LEAF_NODE_VALUE_DT)
 tree_classifier = tree_classifier.fit(X_train_tfidf, labels_train)
 tree_accuracy = tree_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", tree_accuracy)
 print("\n")
 
-#tree_predictions = tree_classifier.predict(data_test_labeled)
 tree_predictions = tree_classifier.predict(X_test_tfidf)
 print("Classification Report:")
 print(classification_report(labels_test, tree_predictions))
 print("\n")
 
 # Random Forest
+MIN_SAMPLES_SPLIT_VALUE_RF = 5
+MAX_LEAF_NODE_VALUE_RF = 75
 print("RANDOM FOREST CLASSIFIER:")
-forest = RandomForestClassifier(n_estimators=10, min_samples_split=MIN_SAMPLES_SPLIT_VALUE, max_leaf_nodes=MAX_LEAF_NODE_VALUE)
-forest = forest.fit(X_train_tfidf, labels_train)
-forest_accuracy = forest.score(X_test_tfidf, labels_test)
+forest_classifier = RandomForestClassifier(n_estimators=10, min_samples_split=MIN_SAMPLES_SPLIT_VALUE_RF, max_leaf_nodes=MAX_LEAF_NODE_VALUE_RF)
+forest_classifier = forest_classifier.fit(X_train_tfidf, labels_train)
+forest_accuracy = forest_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", forest_accuracy)
 print("\n")
 
-forest_predictions = forest.predict(X_test_tfidf)
+forest_predictions = forest_classifier.predict(X_test_tfidf)
 print("Classification Report:")
 print(classification_report(labels_test, forest_predictions))
 print("\n")
 
 # Naive Bayes
 print("NAIVE BAYES CLASSIFIER:")
-nb_classifier = MultinomialNB().fit(X_train_tfidf, labels_train)
+nb_classifier = MultinomialNB()
+mb_classifier = nb_classifier.fit(X_train_tfidf, labels_train)
 nb_accuracy = nb_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", nb_accuracy)
 print("\n")
