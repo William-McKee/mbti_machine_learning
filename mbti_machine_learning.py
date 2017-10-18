@@ -134,37 +134,36 @@ stops_set = set(stopwords.words("english"))
 for index,row in mbti_data.iterrows():
     mbti_types_list.append(mbti_types[row['type']][1])
     mbti_posts_list.append(clean_up_post(row['posts'], stops_set))
-
-        
-# ===== NATURAL LANGUAGE EXPERIMENTATION =====
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
-
-vectorizer = CountVectorizer(analyzer='word', min_df=0.1, max_df=0.5)
-fitted_transformed_data = vectorizer.fit_transform(mbti_posts_list)
-print("Fitted Transformed Data:")
-print(fitted_transformed_data)
-print("\n")
-
-tfidf_transformer = TfidfTransformer()
-tfidf_transformed_data =  tfidf_transformer.fit_transform(fitted_transformed_data).toarray()
-print("TfIdf Transformed Data:")
-print(tfidf_transformed_data)
-print("\n")
-
-# ===== MACHINE LEARNING EXPERIMENTATION =====
+    
+# ===== NATURAL LANGUAGE PROCESSING =====
 from sklearn.model_selection import train_test_split
-from sklearn import tree
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Split data into training and testing sets
 data_train, data_test, labels_train, labels_test = \
-train_test_split(mbti_posts_list, mbti_types_list, test_size=0.2, random_state=32)
+    train_test_split(mbti_posts_list, mbti_types_list, test_size=0.2, random_state=32)
 print("Training / Testing / Total Data lengths: ")
 print(len(data_train), len(data_test), len(data_train) + len(data_test))
 print("\n")
+
+vectorizer = TfidfVectorizer(analyzer='word', min_df=0.01, stop_words = 'english')
+X_train_tfidf = vectorizer.fit_transform(data_train)
+X_test_tfidf = vectorizer.transform(data_test)
+
+print("Training Data Matrix Shape:")
+print(X_train_tfidf.shape)
+print("\n")
+
+print("Testing Data Matrix Shape:")
+print(X_test_tfidf.shape)
+print("\n")
+
+# ===== MACHINE LEARNING EXPERIMENTATION =====
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report
 
 # Need labeled and transformed data
 lb = LabelEncoder()
@@ -180,12 +179,13 @@ MAX_LEAF_NODE_VALUE = 150
 # Decision Tree
 print("DECISION TREE CLASSIFIER:")
 tree_classifier = tree.DecisionTreeClassifier(min_samples_split=MIN_SAMPLES_SPLIT_VALUE, max_leaf_nodes=MAX_LEAF_NODE_VALUE)
-tree_classifier = tree_classifier.fit(data_train_labeled, labels_train)
-tree_accuracy = tree_classifier.score(data_test_labeled, labels_test)
+tree_classifier = tree_classifier.fit(X_train_tfidf, labels_train)
+tree_accuracy = tree_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", tree_accuracy)
 print("\n")
 
-tree_predictions = tree_classifier.predict(data_test_labeled)
+#tree_predictions = tree_classifier.predict(data_test_labeled)
+tree_predictions = tree_classifier.predict(X_test_tfidf)
 print("Classification Report:")
 print(classification_report(labels_test, tree_predictions))
 print("\n")
@@ -193,11 +193,24 @@ print("\n")
 # Random Forest
 print("RANDOM FOREST CLASSIFIER:")
 forest = RandomForestClassifier(n_estimators=10, min_samples_split=MIN_SAMPLES_SPLIT_VALUE, max_leaf_nodes=MAX_LEAF_NODE_VALUE)
-forest = forest.fit(data_train_labeled, labels_train)
-forest_accuracy = forest.score(data_test_labeled, labels_test)
+forest = forest.fit(X_train_tfidf, labels_train)
+forest_accuracy = forest.score(X_test_tfidf, labels_test)
 print("Accuracy: ", forest_accuracy)
 print("\n")
 
-forest_predictions = forest.predict(data_test_labeled)
+forest_predictions = forest.predict(X_test_tfidf)
 print("Classification Report:")
 print(classification_report(labels_test, forest_predictions))
+print("\n")
+
+# Naive Bayes
+print("NAIVE BAYES CLASSIFIER:")
+nb_classifier = MultinomialNB().fit(X_train_tfidf, labels_train)
+nb_accuracy = nb_classifier.score(X_test_tfidf, labels_test)
+print("Accuracy: ", nb_accuracy)
+print("\n")
+
+nb_predictions = nb_classifier.predict(X_test_tfidf)
+print("Classification Report:")
+print(classification_report(labels_test, nb_predictions))
+print("\n")
