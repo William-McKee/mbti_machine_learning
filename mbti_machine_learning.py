@@ -140,8 +140,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Split data into training and testing sets
+RANDOM_STATE = 32
 data_train, data_test, labels_train, labels_test = \
-    train_test_split(mbti_posts_list, mbti_types_list, test_size=0.2, random_state=32)
+    train_test_split(mbti_posts_list, mbti_types_list, test_size=0.2, random_state=RANDOM_STATE)
 print("Training / Testing / Total Data lengths: ")
 print(len(data_train), len(data_test), len(data_train) + len(data_test))
 print("\n")
@@ -164,10 +165,8 @@ print("\n")
 # Decision Tree
 from sklearn import tree
 from sklearn.metrics import classification_report
-MIN_SAMPLES_SPLIT_VALUE_DT = 10
-MAX_LEAF_NODE_VALUE_DT = 50
 print("DECISION TREE CLASSIFIER:")
-tree_classifier = tree.DecisionTreeClassifier(min_samples_split=MIN_SAMPLES_SPLIT_VALUE_DT, max_leaf_nodes=MAX_LEAF_NODE_VALUE_DT)
+tree_classifier = tree.DecisionTreeClassifier(min_samples_split=10, max_leaf_nodes=50, random_state=RANDOM_STATE)
 tree_classifier = tree_classifier.fit(X_train_tfidf, labels_train)
 tree_accuracy = tree_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", tree_accuracy)
@@ -180,10 +179,8 @@ print("\n")
 
 # Random Forest
 from sklearn.ensemble import RandomForestClassifier
-MIN_SAMPLES_SPLIT_VALUE_RF = 5
-MAX_LEAF_NODE_VALUE_RF = 75
 print("RANDOM FOREST CLASSIFIER:")
-forest_classifier = RandomForestClassifier(n_estimators=10, min_samples_split=MIN_SAMPLES_SPLIT_VALUE_RF, max_leaf_nodes=MAX_LEAF_NODE_VALUE_RF)
+forest_classifier = RandomForestClassifier(n_estimators=20, min_samples_split=5, max_leaf_nodes=75, random_state=RANDOM_STATE)
 forest_classifier = forest_classifier.fit(X_train_tfidf, labels_train)
 forest_accuracy = forest_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", forest_accuracy)
@@ -197,7 +194,7 @@ print("\n")
 # Naive Bayes
 from sklearn.naive_bayes import MultinomialNB
 print("NAIVE BAYES CLASSIFIER:")
-nb_classifier = MultinomialNB()
+nb_classifier = MultinomialNB(alpha=0.01, fit_prior=False)
 nb_classifier = nb_classifier.fit(X_train_tfidf, labels_train)
 nb_accuracy = nb_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", nb_accuracy)
@@ -208,10 +205,11 @@ print("Classification Report:")
 print(classification_report(labels_test, nb_predictions))
 print("\n")
 
-# Support Vector Machines
+# Stochastic Gradient Descent 
 from sklearn.linear_model import SGDClassifier
-print("SUPPORT VECTOR MACHINE CLASSIFIER:")
-sgd_classifier = SGDClassifier(max_iter=10)
+print("STOCHASTIC GRADIENT DESCENT CLASSIFIER:")
+SDG_MAX_ITER = 10
+sgd_classifier = SGDClassifier(max_iter=SDG_MAX_ITER, random_state=RANDOM_STATE)
 sgd_classifier = sgd_classifier.fit(X_train_tfidf, labels_train)
 sgd_accuracy = sgd_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", sgd_accuracy)
@@ -226,8 +224,8 @@ print("\n")
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import make_pipeline
 print("SELECT K BEST CLASSIFIER:")
-kbest_filter = SelectKBest(f_classif, k=25)
-kbest_classifier = SGDClassifier(max_iter=10)
+kbest_filter = SelectKBest(f_classif, k=2500)
+kbest_classifier = SGDClassifier(max_iter=SDG_MAX_ITER, random_state=RANDOM_STATE)
 kbest_pipeline = make_pipeline(kbest_filter, kbest_classifier)
 kbest_pipeline = kbest_pipeline.fit(X_train_tfidf, labels_train)
 kbest_accuracy = kbest_pipeline.score(X_test_tfidf, labels_test)
