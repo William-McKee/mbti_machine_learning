@@ -160,20 +160,10 @@ print("\n")
 
 # ===== MACHINE LEARNING EXPERIMENTATION =====
 # TODO: Implement function which cycles through parameters and return highest accuracy (or some other measure)
-from sklearn import tree
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report
-
-# Need labeled and transformed data
-lb = LabelEncoder()
-data_train_labeled = lb.fit_transform(data_train)
-data_test_labeled = lb.fit_transform(data_test)
-data_train_labeled = data_train_labeled[:, None]
-data_test_labeled = data_test_labeled[:, None]
 
 # Decision Tree
+from sklearn import tree
+from sklearn.metrics import classification_report
 MIN_SAMPLES_SPLIT_VALUE_DT = 10
 MAX_LEAF_NODE_VALUE_DT = 50
 print("DECISION TREE CLASSIFIER:")
@@ -189,6 +179,7 @@ print(classification_report(labels_test, tree_predictions))
 print("\n")
 
 # Random Forest
+from sklearn.ensemble import RandomForestClassifier
 MIN_SAMPLES_SPLIT_VALUE_RF = 5
 MAX_LEAF_NODE_VALUE_RF = 75
 print("RANDOM FOREST CLASSIFIER:")
@@ -204,9 +195,10 @@ print(classification_report(labels_test, forest_predictions))
 print("\n")
 
 # Naive Bayes
+from sklearn.naive_bayes import MultinomialNB
 print("NAIVE BAYES CLASSIFIER:")
 nb_classifier = MultinomialNB()
-mb_classifier = nb_classifier.fit(X_train_tfidf, labels_train)
+nb_classifier = nb_classifier.fit(X_train_tfidf, labels_train)
 nb_accuracy = nb_classifier.score(X_test_tfidf, labels_test)
 print("Accuracy: ", nb_accuracy)
 print("\n")
@@ -214,4 +206,35 @@ print("\n")
 nb_predictions = nb_classifier.predict(X_test_tfidf)
 print("Classification Report:")
 print(classification_report(labels_test, nb_predictions))
+print("\n")
+
+# Support Vector Machines
+from sklearn.linear_model import SGDClassifier
+print("SUPPORT VECTOR MACHINE CLASSIFIER:")
+sgd_classifier = SGDClassifier(max_iter=10)
+sgd_classifier = sgd_classifier.fit(X_train_tfidf, labels_train)
+sgd_accuracy = sgd_classifier.score(X_test_tfidf, labels_test)
+print("Accuracy: ", sgd_accuracy)
+print("\n")
+
+sgd_predictions = sgd_classifier.predict(X_test_tfidf)
+print("Classification Report:")
+print(classification_report(labels_test, sgd_predictions))
+print("\n")
+
+# Select K Best
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.pipeline import make_pipeline
+print("SELECT K BEST CLASSIFIER:")
+kbest_filter = SelectKBest(f_classif, k=25)
+kbest_classifier = SGDClassifier(max_iter=10)
+kbest_pipeline = make_pipeline(kbest_filter, kbest_classifier)
+kbest_pipeline = kbest_pipeline.fit(X_train_tfidf, labels_train)
+kbest_accuracy = kbest_pipeline.score(X_test_tfidf, labels_test)
+print("Accuracy: ", kbest_accuracy)
+print("\n")
+
+kbest_predictions = kbest_pipeline.predict(X_test_tfidf)
+print("Classification Report:")
+print(classification_report(labels_test, kbest_predictions))
 print("\n")
