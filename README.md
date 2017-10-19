@@ -1,6 +1,6 @@
 # MBTI Machine Learning
 
-This code reads in Meyers-Briggs type data and builds a model to predict someone's MBTI type based on the text of their written posts.  The data set is available on Kaggle.  Search for "mbti".
+This code reads in Myers-Briggs type data and builds a model to predict someone's MBTI type based on the text of their written posts.  The data set is available on Kaggle.  Search for "mbti".
 
 Please note this is a work in progress.
 
