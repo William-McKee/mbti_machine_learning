@@ -87,7 +87,13 @@ print(mbti_temperament_counts)
 print("\n")
 
 def clean_up_post(post, stops_set):
-    '''Change post contents so that they contain only significant words'''
+    '''
+    Change post contents so that they contain only significant words
+    post = posts from one line of csv file
+    stops_set = set of stop words which do not add any value to NLP prediction
+    
+    Returns cleaned up post
+    '''
     # Split up post
     these_posts = post.split("|||")
     final_posts = []
@@ -117,7 +123,6 @@ def clean_up_post(post, stops_set):
             final_words = final_words + " " + this_word
         
         # Join words for post
-        #final_words = final_words.strip()
         final_posts.append(final_words)
     
     # Join posts
@@ -147,6 +152,7 @@ print("Training / Testing / Total Data lengths: ")
 print(len(data_train), len(data_test), len(data_train) + len(data_test))
 print("\n")
 
+# Perform vectorization based on word frequency
 vectorizer = TfidfVectorizer(analyzer='word', min_df=0.01, stop_words = 'english')
 X_train_tfidf = vectorizer.fit_transform(data_train)
 X_test_tfidf = vectorizer.transform(data_test)
@@ -160,8 +166,8 @@ print(X_test_tfidf.shape)
 print("\n")
 
 # ===== MACHINE LEARNING EXPERIMENTATION =====
-# TODO: Implement function which cycles through parameters and return highest accuracy (or some other measure)
 from sklearn import tree
+from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report
@@ -169,21 +175,53 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import make_pipeline
 
+def get_best_parameters(classifier, param_dict, data_train, labels_train):
+    '''
+    Determine the best scoring parameters for classifier
+    classifier = supervised learning classifier to be scored
+    param_dict = dictionary containing keyword arguments and list of values to try
+    data_train = training data
+    labels_train = correct answers for the trained data points
+       
+    Returns the best estimator dictionary
+    '''
+    grid = GridSearchCV(estimator=classifier, param_grid=param_dict)
+    grid.fit(X_train_tfidf, labels_train)
+    return (grid.best_estimator_)
+
 def score_classifier(classifier, data_train, labels_train, data_test, labels_test):
-    '''Train and test a classifier.  Show performance to the user.'''
+    '''
+    Train and test a classifier.  Show performance to the user.
+    classifier = supervised learning classifier to be scored
+    data_train = training data
+    labels_train = correct answers for the trained data points
+    data_test = testing data
+    labels_test = correct answer for the tested data points
+       
+    No return type
+    '''
+    # Fit classifier
     classifier_fit = classifier.fit(data_train, labels_train)
     accuracy = classifier_fit.score(data_test, labels_test)
     print("Accuracy: ", accuracy)
     print("\n")
     
+    # Make predictions
     predictions = classifier_fit.predict(data_test)
     print("Classification Report:")
     print(classification_report(labels_test, predictions))
     print("\n")
-
+    
 # Decision Tree
 print("DECISION TREE CLASSIFIER:")
-tree_classifier = tree.DecisionTreeClassifier(min_samples_split=10, max_leaf_nodes=50, random_state=RANDOM_STATE)
+tree_parameters = {'min_samples_split': [2,3,5,10,20], 
+                   'max_leaf_nodes':[10,25,50,100,200]}
+tree_classifier = tree.DecisionTreeClassifier()
+best_estimator = get_best_parameters(tree_classifier, tree_parameters, X_train_tfidf, labels_train)
+
+tree_classifier = tree.DecisionTreeClassifier(min_samples_split=best_estimator.min_samples_split, 
+                                              max_leaf_nodes=best_estimator.max_leaf_nodes, 
+                                              random_state=RANDOM_STATE)
 score_classifier(tree_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Random Forest
