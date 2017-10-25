@@ -161,78 +161,50 @@ print("\n")
 
 # ===== MACHINE LEARNING EXPERIMENTATION =====
 # TODO: Implement function which cycles through parameters and return highest accuracy (or some other measure)
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report
+from sklearn.linear_model import SGDClassifier
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.pipeline import make_pipeline
+
+def score_classifier(classifier, data_train, labels_train, data_test, labels_test):
+    '''Train and test a classifier.  Show performance to the user.'''
+    classifier_fit = classifier.fit(data_train, labels_train)
+    accuracy = classifier_fit.score(data_test, labels_test)
+    print("Accuracy: ", accuracy)
+    print("\n")
+    
+    predictions = classifier_fit.predict(data_test)
+    print("Classification Report:")
+    print(classification_report(labels_test, predictions))
+    print("\n")
 
 # Decision Tree
-from sklearn import tree
-from sklearn.metrics import classification_report
 print("DECISION TREE CLASSIFIER:")
 tree_classifier = tree.DecisionTreeClassifier(min_samples_split=10, max_leaf_nodes=50, random_state=RANDOM_STATE)
-tree_classifier = tree_classifier.fit(X_train_tfidf, labels_train)
-tree_accuracy = tree_classifier.score(X_test_tfidf, labels_test)
-print("Accuracy: ", tree_accuracy)
-print("\n")
-
-tree_predictions = tree_classifier.predict(X_test_tfidf)
-print("Classification Report:")
-print(classification_report(labels_test, tree_predictions))
-print("\n")
+score_classifier(tree_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Random Forest
-from sklearn.ensemble import RandomForestClassifier
 print("RANDOM FOREST CLASSIFIER:")
 forest_classifier = RandomForestClassifier(n_estimators=20, min_samples_split=5, max_leaf_nodes=75, random_state=RANDOM_STATE)
-forest_classifier = forest_classifier.fit(X_train_tfidf, labels_train)
-forest_accuracy = forest_classifier.score(X_test_tfidf, labels_test)
-print("Accuracy: ", forest_accuracy)
-print("\n")
-
-forest_predictions = forest_classifier.predict(X_test_tfidf)
-print("Classification Report:")
-print(classification_report(labels_test, forest_predictions))
-print("\n")
+score_classifier(forest_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Naive Bayes
-from sklearn.naive_bayes import MultinomialNB
 print("NAIVE BAYES CLASSIFIER:")
 nb_classifier = MultinomialNB(alpha=0.01, fit_prior=False)
-nb_classifier = nb_classifier.fit(X_train_tfidf, labels_train)
-nb_accuracy = nb_classifier.score(X_test_tfidf, labels_test)
-print("Accuracy: ", nb_accuracy)
-print("\n")
-
-nb_predictions = nb_classifier.predict(X_test_tfidf)
-print("Classification Report:")
-print(classification_report(labels_test, nb_predictions))
-print("\n")
+score_classifier(nb_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Stochastic Gradient Descent 
-from sklearn.linear_model import SGDClassifier
 print("STOCHASTIC GRADIENT DESCENT CLASSIFIER:")
 SDG_MAX_ITER = 10
 sgd_classifier = SGDClassifier(max_iter=SDG_MAX_ITER, random_state=RANDOM_STATE)
-sgd_classifier = sgd_classifier.fit(X_train_tfidf, labels_train)
-sgd_accuracy = sgd_classifier.score(X_test_tfidf, labels_test)
-print("Accuracy: ", sgd_accuracy)
-print("\n")
-
-sgd_predictions = sgd_classifier.predict(X_test_tfidf)
-print("Classification Report:")
-print(classification_report(labels_test, sgd_predictions))
-print("\n")
+score_classifier(sgd_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Select K Best
-from sklearn.feature_selection import SelectKBest, f_classif
-from sklearn.pipeline import make_pipeline
 print("SELECT K BEST CLASSIFIER:")
 kbest_filter = SelectKBest(f_classif, k=2500)
 kbest_classifier = SGDClassifier(max_iter=SDG_MAX_ITER, random_state=RANDOM_STATE)
 kbest_pipeline = make_pipeline(kbest_filter, kbest_classifier)
-kbest_pipeline = kbest_pipeline.fit(X_train_tfidf, labels_train)
-kbest_accuracy = kbest_pipeline.score(X_test_tfidf, labels_test)
-print("Accuracy: ", kbest_accuracy)
-print("\n")
-
-kbest_predictions = kbest_pipeline.predict(X_test_tfidf)
-print("Classification Report:")
-print(classification_report(labels_test, kbest_predictions))
-print("\n")
+score_classifier(kbest_pipeline, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
