@@ -185,8 +185,9 @@ def get_best_parameters(classifier, param_dict, data_train, labels_train):
        
     Returns the best estimator dictionary
     '''
+    #data_train_scaled = preprocessing.scale(data_train)
     grid = GridSearchCV(estimator=classifier, param_grid=param_dict)
-    grid.fit(X_train_tfidf, labels_train)
+    grid.fit(data_train, labels_train)
     return (grid.best_estimator_)
 
 def score_classifier(classifier, data_train, labels_train, data_test, labels_test):
@@ -214,8 +215,8 @@ def score_classifier(classifier, data_train, labels_train, data_test, labels_tes
     
 # Decision Tree
 print("DECISION TREE CLASSIFIER:")
-tree_parameters = {'min_samples_split': [2,3,5,10,20], 
-                   'max_leaf_nodes':[10,25,50,100,200]}
+tree_parameters = {'min_samples_split': [2,5,10], 
+                   'max_leaf_nodes': [10,25,50]}
 tree_classifier = tree.DecisionTreeClassifier()
 best_estimator = get_best_parameters(tree_classifier, tree_parameters, X_train_tfidf, labels_train)
 
@@ -226,23 +227,39 @@ score_classifier(tree_classifier, X_train_tfidf, labels_train, X_test_tfidf, lab
 
 # Random Forest
 print("RANDOM FOREST CLASSIFIER:")
-forest_classifier = RandomForestClassifier(n_estimators=20, min_samples_split=5, max_leaf_nodes=75, random_state=RANDOM_STATE)
+forest_parameters = {'n_estimators': [10,20,30],
+                     'min_samples_split': [2,5,10], 
+                     'max_leaf_nodes': [25,50,75]}
+forest_classifier = RandomForestClassifier()
+best_estimator = get_best_parameters(forest_classifier, forest_parameters, X_train_tfidf, labels_train)
+
+forest_classifier = RandomForestClassifier(n_estimators=best_estimator.n_estimators, 
+                                           min_samples_split=best_estimator.min_samples_split, 
+                                           max_leaf_nodes=best_estimator.max_leaf_nodes, 
+                                           random_state=RANDOM_STATE)
 score_classifier(forest_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Naive Bayes
 print("NAIVE BAYES CLASSIFIER:")
-nb_classifier = MultinomialNB(alpha=0.01, fit_prior=False)
+nb_parameters = {'alpha': [0.001, 0.01, 0.1]}
+nb_classifier = MultinomialNB()
+best_estimator = get_best_parameters(nb_classifier, nb_parameters, X_train_tfidf, labels_train)
+
+nb_classifier = MultinomialNB(alpha=best_estimator.alpha, fit_prior=False)
 score_classifier(nb_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Stochastic Gradient Descent 
 print("STOCHASTIC GRADIENT DESCENT CLASSIFIER:")
-SDG_MAX_ITER = 10
-sgd_classifier = SGDClassifier(max_iter=SDG_MAX_ITER, random_state=RANDOM_STATE)
+sgd_parameters = {'max_iter': [2,5,10]}
+sgd_classifier = SGDClassifier()
+best_estimator = get_best_parameters(sgd_classifier, sgd_parameters, X_train_tfidf, labels_train)
+
+sgd_classifier = SGDClassifier(max_iter=best_estimator.max_iter, random_state=RANDOM_STATE)
 score_classifier(sgd_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
 
 # Select K Best
 print("SELECT K BEST CLASSIFIER:")
 kbest_filter = SelectKBest(f_classif, k=2500)
-kbest_classifier = SGDClassifier(max_iter=SDG_MAX_ITER, random_state=RANDOM_STATE)
+kbest_classifier = SGDClassifier(max_iter=best_estimator.max_iter, random_state=RANDOM_STATE)
 kbest_pipeline = make_pipeline(kbest_filter, kbest_classifier)
 score_classifier(kbest_pipeline, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
