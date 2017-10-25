@@ -172,6 +172,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report
 from sklearn.linear_model import SGDClassifier
+from sklearn.svm import LinearSVC
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import make_pipeline
 
@@ -263,3 +264,13 @@ kbest_filter = SelectKBest(f_classif, k=2500)
 kbest_classifier = SGDClassifier(max_iter=best_estimator.max_iter, random_state=RANDOM_STATE)
 kbest_pipeline = make_pipeline(kbest_filter, kbest_classifier)
 score_classifier(kbest_pipeline, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
+
+# Support Vector Machine
+print("SUPPORT VECTOR MACHINE:")
+svm_parameters = {'C': [0.1, 1.0, 10.0],
+                  'loss': ['hinge', 'squared_hinge']}
+svm_classifier = LinearSVC()
+best_estimator = get_best_parameters(svm_classifier, svm_parameters, X_train_tfidf, labels_train)
+
+svm_classifier = LinearSVC(C=best_estimator.C, loss=best_estimator.loss, random_state=RANDOM_STATE)
+score_classifier(svm_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
