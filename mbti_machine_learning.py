@@ -173,6 +173,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import classification_report
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import make_pipeline
 
@@ -272,5 +273,28 @@ svm_parameters = {'C': [0.1, 1.0, 10.0],
 svm_classifier = LinearSVC()
 best_estimator = get_best_parameters(svm_classifier, svm_parameters, X_train_tfidf, labels_train)
 
-svm_classifier = LinearSVC(C=best_estimator.C, loss=best_estimator.loss, random_state=RANDOM_STATE)
+svm_classifier = LinearSVC(C=best_estimator.C, 
+                           loss=best_estimator.loss, 
+                           random_state=RANDOM_STATE)
 score_classifier(svm_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
+
+# Multi-Layer Perceptron
+# TODO: Any way to make this one faster?
+print("MULTI-LAYER PERCEPTRON:")
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler(with_mean=False)
+scaler.fit(X_train_tfidf)
+
+# Now apply the transformations to the data:
+X_train_mlp = scaler.transform(X_train_tfidf)
+X_test_mlp = scaler.transform(X_test_tfidf)
+
+mlp_parameters = {'solver': ['lbfgs', 'sgd', 'adam'],
+                  'alpha': [0.001, 0.01, 0.1]}
+mlp_classifier = MLPClassifier()
+best_estimator = get_best_parameters(mlp_classifier, mlp_parameters, X_train_mlp, labels_train)
+
+mlp_classifier = MLPClassifier(solver=best_estimator.solver, 
+                               alpha=best_estimator.alpha, 
+                               random_state=RANDOM_STATE)
+score_classifier(mlp_classifier, X_train_mlp, labels_train, X_test_mlp, labels_test)
