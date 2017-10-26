@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 Meyers Briggs Machine Learning Algorithm
+Main Program
 William McKee
 October 2017
 """
 
 # Initial library declarations
 import pandas as pd
-import string
 from nltk.corpus import stopwords
+from mbti_cleaning import clean_up_post
 
 # General population percentages for MBTI types
 # http://www.myersbriggs.org/my-mbti-personality-type/my-mbti-results/how-frequent-is-my-type.htm?bhcp=1
@@ -85,60 +86,14 @@ print("MBTI TEMPERAMENTS TABLE\n")
 mbti_temperament_counts = mbti_type_counts.groupby('temperament').sum()
 print(mbti_temperament_counts)
 print("\n")
-
-def clean_up_post(post, stops_set):
-    '''
-    Change post contents so that they contain only significant words
-    post = posts from one line of csv file
-    stops_set = set of stop words which do not add any value to NLP prediction
-    
-    Returns cleaned up post
-    '''
-    # Split up post
-    these_posts = post.split("|||")
-    final_posts = []
-    
-    # Loop through posts
-    for this_post in these_posts:
-        
-        # Split into words
-        words = this_post.split()
-        
-        # Loop through words
-        final_words = ""
-        for word in words:
-
-            # Remove punctuation and tildes
-            exclude = set(string.punctuation)
-            this_word = ''.join(ch for ch in word if ch not in exclude)
-    
-            # Convert to lower case
-            this_word = this_word.lower()
-            
-            # Exclude links, numbers, stop words, and MBTI types
-            if (word.startswith('http') or word.isdigit() or word in stops_set or word.upper() in mbti_types.keys()):
-                continue
-            
-            # Final post for storage
-            final_words = final_words + " " + this_word
-        
-        # Join words for post
-        final_posts.append(final_words)
-    
-    # Join posts
-    result_post = ""
-    for item in final_posts:
-        result_post = result_post + item
-    
-    return (result_post)
-    
+   
 # Store posts by MBTI temperment
 mbti_types_list = []
 mbti_posts_list = []
 stops_set = set(stopwords.words("english"))
 for index,row in mbti_data.iterrows():
     mbti_types_list.append(mbti_types[row['type']][1])
-    mbti_posts_list.append(clean_up_post(row['posts'], stops_set))
+    mbti_posts_list.append(clean_up_post(row['posts'], stops_set, mbti_types))
     
 # ===== NATURAL LANGUAGE PROCESSING =====
 from sklearn.model_selection import train_test_split
@@ -167,7 +122,6 @@ print("\n")
 
 # ===== MACHINE LEARNING EXPERIMENTATION =====
 from sklearn import tree
-from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import SGDClassifier
@@ -175,48 +129,7 @@ from sklearn.svm import LinearSVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import make_pipeline
-from sklearn.metrics import classification_report, confusion_matrix
-
-def get_best_parameters(classifier, param_dict, data_train, labels_train):
-    '''
-    Determine the best scoring parameters for classifier
-    classifier = supervised learning classifier to be scored
-    param_dict = dictionary containing keyword arguments and list of values to try
-    data_train = training data
-    labels_train = correct answers for the trained data points
-       
-    Returns the best estimator dictionary
-    '''
-    #data_train_scaled = preprocessing.scale(data_train)
-    grid = GridSearchCV(estimator=classifier, param_grid=param_dict)
-    grid.fit(data_train, labels_train)
-    return (grid.best_estimator_)
-
-def score_classifier(classifier, data_train, labels_train, data_test, labels_test):
-    '''
-    Train and test a classifier.  Show performance to the user.
-    classifier = supervised learning classifier to be scored
-    data_train = training data
-    labels_train = correct answers for the trained data points
-    data_test = testing data
-    labels_test = correct answer for the tested data points
-       
-    No return type
-    '''
-    # Fit classifier
-    classifier_fit = classifier.fit(data_train, labels_train)
-    accuracy = classifier_fit.score(data_test, labels_test)
-    print("Accuracy: ", accuracy)
-    print("\n")
-    
-    # Make predictions
-    predictions = classifier_fit.predict(data_test)
-    print("Classification Report:")
-    print(classification_report(labels_test, predictions))
-    print("\n")
-    print("Confusion Matrix:")
-    print(confusion_matrix(labels_test, predictions))
-    print("\n")
+from mbti_classification import get_best_parameters, score_classifier
     
 # Decision Tree
 print("DECISION TREE CLASSIFIER:")
