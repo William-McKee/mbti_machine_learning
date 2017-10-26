@@ -101,8 +101,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # Split data into training and testing sets
 RANDOM_STATE = 32
+TEST_SIZE = 0.2
 data_train, data_test, labels_train, labels_test = \
-    train_test_split(mbti_posts_list, mbti_types_list, test_size=0.2, random_state=RANDOM_STATE)
+    train_test_split(mbti_posts_list, mbti_types_list, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 print("Training / Testing / Total Data lengths: ")
 print(len(data_train), len(data_test), len(data_train) + len(data_test))
 print("\n")
@@ -126,7 +127,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
-from sklearn.neural_network import MLPClassifier
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import make_pipeline
 from mbti_classification import get_best_parameters, score_classifier
@@ -193,24 +193,3 @@ svm_classifier = LinearSVC(C=best_estimator.C,
                            loss=best_estimator.loss, 
                            random_state=RANDOM_STATE)
 score_classifier(svm_classifier, X_train_tfidf, labels_train, X_test_tfidf, labels_test)
-
-# Multi-Layer Perceptron
-# TODO: Any way to make this one faster?
-print("MULTI-LAYER PERCEPTRON:")
-from sklearn.preprocessing import StandardScaler
-scaler = StandardScaler(with_mean=False)
-scaler.fit(X_train_tfidf)
-
-# Now apply the transformations to the data:
-X_train_mlp = scaler.transform(X_train_tfidf)
-X_test_mlp = scaler.transform(X_test_tfidf)
-
-mlp_parameters = {'solver': ['lbfgs', 'sgd', 'adam'],
-                  'alpha': [0.001, 0.01, 0.1]}
-mlp_classifier = MLPClassifier()
-best_estimator = get_best_parameters(mlp_classifier, mlp_parameters, X_train_mlp, labels_train)
-
-mlp_classifier = MLPClassifier(solver=best_estimator.solver, 
-                               alpha=best_estimator.alpha, 
-                               random_state=RANDOM_STATE)
-score_classifier(mlp_classifier, X_train_mlp, labels_train, X_test_mlp, labels_test)
