@@ -170,12 +170,12 @@ from sklearn import tree
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import classification_report
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import LinearSVC
 from sklearn.neural_network import MLPClassifier
 from sklearn.feature_selection import SelectKBest, f_classif
 from sklearn.pipeline import make_pipeline
+from sklearn.metrics import classification_report, confusion_matrix
 
 def get_best_parameters(classifier, param_dict, data_train, labels_train):
     '''
@@ -213,6 +213,9 @@ def score_classifier(classifier, data_train, labels_train, data_test, labels_tes
     predictions = classifier_fit.predict(data_test)
     print("Classification Report:")
     print(classification_report(labels_test, predictions))
+    print("\n")
+    print("Confusion Matrix:")
+    print(confusion_matrix(labels_test, predictions))
     print("\n")
     
 # Decision Tree
