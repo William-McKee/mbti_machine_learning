@@ -2,12 +2,11 @@
 
 This code reads in Myers-Briggs type data and builds a model to predict someone's MBTI type based on the text of their written posts.  The data set is available on Kaggle.  Search for "mbti".
 
-Please note this is a work in progress.
-
 ## File Contents
 
-1. **mbti_machine_learning.py**: Python code which reads the csv file and runs the algorithm
-2. **TBD**: More Python source code files coming
+1. **mbti_machine_learning.py**: Python code which reads the csv file, cleans the data, and runs machine learning algorithms
+2. **mbti_cleaning.py**: Python function related to cleaning the data
+3. **mbti_classification.py**: Python functions related to machine learning algorithms
 
 All files shall be downloaded in the same directory.
 
