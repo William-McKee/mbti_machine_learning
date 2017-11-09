@@ -36,15 +36,15 @@ mbti_data = pd.read_csv('mbti_1.csv')
 # Data set basic properties
 print("Data dimensions: ")
 print(mbti_data.shape)
-print("\n")
+print()
 
 print("Column values:")
 print(mbti_data.columns.values)
-print("\n")
+print()
 
 print("Data description:")
 print(mbti_data.describe)
-print("\n")
+print()
 
 # Assure every row has a proper MBTI type
 incorrect_types = []
@@ -57,7 +57,7 @@ if (len(incorrect_types) > 0):
     print(incorrect_types)
 else:
     print("There are no incorrect Meyers-Briggs Types in any rows")
-print("\n")
+print()
 
 TOTAL = len(mbti_data)
 def get_sample_percentage(item):
@@ -79,13 +79,13 @@ mbti_type_counts['percent_sample'] = mbti_type_counts.apply(get_sample_percentag
 mbti_type_counts['percent_population'] = mbti_type_counts.index.map(get_population_percentage)
 mbti_type_counts['temperament'] = mbti_type_counts.index.map(get_temperament)
 print(mbti_type_counts)
-print("\n")
+print()
 
 # Group by temperament and list percentages
 print("MBTI TEMPERAMENTS TABLE\n")
 mbti_temperament_counts = mbti_type_counts.groupby('temperament').sum()
 print(mbti_temperament_counts)
-print("\n")
+print()
    
 # Store posts by MBTI temperment
 mbti_types_list = []
@@ -106,7 +106,7 @@ data_train, data_test, labels_train, labels_test = \
     train_test_split(mbti_posts_list, mbti_types_list, test_size=TEST_SIZE, random_state=RANDOM_STATE)
 print("Training / Testing / Total Data lengths: ")
 print(len(data_train), len(data_test), len(data_train) + len(data_test))
-print("\n")
+print()
 
 # Perform vectorization based on word frequency
 vectorizer = TfidfVectorizer(analyzer='word', min_df=0.01, stop_words = 'english')
@@ -115,11 +115,11 @@ X_test_tfidf = vectorizer.transform(data_test)
 
 print("Training Data Matrix Shape:")
 print(X_train_tfidf.shape)
-print("\n")
+print()
 
 print("Testing Data Matrix Shape:")
 print(X_test_tfidf.shape)
-print("\n")
+print()
 
 # ===== MACHINE LEARNING EXPERIMENTATION =====
 from sklearn import tree

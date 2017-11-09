@@ -39,13 +39,13 @@ def score_classifier(classifier, data_train, labels_train, data_test, labels_tes
     classifier_fit = classifier.fit(data_train, labels_train)
     accuracy = classifier_fit.score(data_test, labels_test)
     print("Accuracy: ", accuracy)
-    print("\n")
+    print()
     
     # Make predictions
     predictions = classifier_fit.predict(data_test)
     print("Classification Report:")
     print(classification_report(labels_test, predictions))
-    print("\n")
+    print()
     print("Confusion Matrix:")
     print(confusion_matrix(labels_test, predictions))
-    print("\n")
+    print()
